@@ -39,7 +39,7 @@ if (use_subset) {
   set$sub_chars <- T
   set$sub_cntry <- T
   # set$screens$size_grps <- "mega"
-  # set$start <- as.Date("2020-12-31")
+  set$start <- as.Date("2020-12-31")
 }
 
 # Run code --------------------

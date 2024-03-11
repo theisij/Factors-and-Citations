@@ -5,13 +5,17 @@ char_info <- readxl::read_xlsx("Paper/Factor Details_revision1.xlsx", sheet = "d
   mutate(direction= direction |> as.numeric()) |> 
   setDT()
 # Add cluster labels
-cluster_labels <- fread("Data/Cluster Labels.csv")
+# cluster_labels <- fread("Data/Cluster Labels.csv")
+new_class <- readxl::read_xlsx("Paper/new_classification.xlsx") %>%
+  select("characteristic"=abr_jkp, cite, paper_about=`Paper is about`, factor_about = `Factor is about`) |> 
+  setDT()
+cluster_labels <- new_class[, .(characteristic, cluster=factor_about)][!is.na(characteristic)]
 char_info <- char_info[cluster_labels, on = "characteristic"]
 
 if (set$sub_chars) {
   char_info <- char_info[characteristic %in% c("ret_12_1", "be_me", "market_equity")]# Delete later}
 }
-features <- char_info$characteristic
+features <- c(char_info$characteristic, "rvol")
 
 # Countries ----------------------------------------------------
 countries <- readxl::read_xlsx("Data/Country Classification.xlsx") |> setDT()
@@ -96,3 +100,22 @@ if (set$feat_impute) {
     chars[, (features) := lapply(.SD, function(x) if_else(is.na(x), median(x, na.rm=T), x)), .SDcols=features, by=eom]
   }
 }
+# Change direction and then aggregate to  cluster characteristic -----------
+clusters <- unique(char_info$cluster)
+cluster_ranks <- clusters %>% map(function(cl) {
+  chars_sub <- char_info[cluster==cl]
+  # print(paste0(cl, ", n: ", nrow(chars_sub)))
+  data_sub <- chars[, chars_sub$characteristic, with=F]
+  for (x in chars_sub$characteristic) {
+    dir <- chars_sub[characteristic == x, direction]
+    if (dir == -1) {
+      data_sub[, (x) := 1-get(x)]
+    }
+  }
+  data.table(x=data_sub %>% rowMeans()) %>% setnames(old = "x", new = cl)
+}) %>% bind_cols()
+# Add to existing data
+chars <- chars[, .(excntry, id, eom, rvol_perc=rvol, me_perc=market_equity, me, ret_exc_lead1m)] |> 
+  cbind(cluster_ranks)
+# Re-standardize cluster features by date
+chars[, (clusters) := lapply(.SD, function(x) ecdf(x)(x)), .SDcols = clusters, by = eom]

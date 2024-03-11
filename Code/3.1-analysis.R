@@ -9,7 +9,7 @@ estimates |>
   geom_col(position = "dodge")
 # Interactions>   
 estimates |> 
-  filter(term %in% c("var:t", "var:me_rank", "var:devTRUE", "var:usTRUE")) |> 
+  filter(term %in% c("var:t", "var:me_rank", "var:devTRUE", "var:usTRUE", "var:rvol_perc")) |> 
   ggplot(aes(x=feature, y = estimate)) +
   coord_flip() +
   geom_col() +
