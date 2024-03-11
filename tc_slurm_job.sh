@@ -3,10 +3,10 @@
 #SBATCH -o slurm_output/output_%j.txt                # Output file (%j will be replaced by the job ID)
 #SBATCH -e slurm_output/error_%j.txt                 # Error file (%j will be replaced by the job ID)
 #SBATCH --ntasks=1                      # Number of tasks (processes)
-#SBATCH --cpus-per-task=4              # Number of CPU cores per task
-#SBATCH --mem=20G                      # Memory per node (450 GB)
+#SBATCH --cpus-per-task=16              # Number of CPU cores per task
+#SBATCH --mem=100G                      # Memory per node (450 GB)
 #SBATCH --partition=day
-#SBATCH --time=10:00
+#SBATCH --time=8:00:00
 
 echo '-------------------------------'
 cd ${SLURM_SUBMIT_DIR}                  # Change directory to slurm submit directory

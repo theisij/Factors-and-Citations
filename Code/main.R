@@ -6,7 +6,7 @@ library(data.table)
 # chars_path <- "../../../International Stock Data/Public/Data/Characteristics/"
 chars_path <- "../Data/Characteristics/"
 
-use_subset <- T
+use_subset <- F
 
 # Layout settings -----------------
 theme_set(theme_bw(base_size = 13))

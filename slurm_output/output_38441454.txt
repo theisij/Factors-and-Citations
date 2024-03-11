@@ -1,0 +1,91 @@
+-------------------------------
+/gpfs/gibbs/project/tjensen/tij2/Factors-and-Citations
+Running on host r806u06n01.grace.ycrc.yale.edu
+Time is Mon Mar 11 14:35:12 EDT 2024
+SLURM_NODES are r806u06n01
+-------------------------------
+
+
+
+
+> char_info <- setDT(mutate(filter(select(readxl::read_xlsx("Paper/Factor Details_revision1.xlsx", 
++     sheet = "details"), characteristic = abr_jkp .... [TRUNCATED] 
+
+> new_class <- setDT(readxl::read_xlsx("Paper/new_classification.xlsx") %>% 
++     select(characteristic = abr_jkp, cite, paper_about = `Paper is abou .... [TRUNCATED] 
+
+> cluster_labels <- new_class[, .(characteristic, cluster = factor_about)][!is.na(characteristic)]
+
+> char_info <- char_info[cluster_labels, on = "characteristic"]
+
+> if (set$sub_chars) {
++     char_info <- char_info[characteristic %in% c("ret_12_1", 
++         "be_me", "market_equity")]
++ }
+
+> features <- c(char_info$characteristic, "rvol_252d")
+
+> countries <- setDT(readxl::read_xlsx("Data/Country Classification.xlsx"))
+
+> if (set$sub_cntry) {
++     countries <- countries[excntry %in% c("GBR", "USA", "THA")]
++ } else {
++     countries <- countries[msci_development %in% .... [TRUNCATED] 
+
+> ret_cutoffs <- fread("Data/return_cutoffs.csv", colClasses = c(eom = "character"))
+
+> ret_cutoffs[, `:=`(eom, eom %>% lubridate::fast_strptime(format = "%Y%m%d") %>% 
++     as.Date())]
+
+> ret_cutoffs <- ret_cutoffs[, .(eom, wins_high = ret_exc_99, 
++     wins_low = ret_exc_1)]
+
+> ret_cutoffs[, `:=`(eom, eom + 1 - months(1) - 1)]
+
+> chars <- rbindlist(map(countries$excntry, function(cntry) {
++     print(cntry)
++     chars_cntry <- fread(paste0(chars_path, str_to_lower(cntry), 
++ .... [TRUNCATED] 
+[1] "USA"
+[1] "   Date screen excludes 96.82% of the observations"
+[1] "   Non-missing me and ret_1m excludes 5.56% of the observations"
+[1] "   Size screen excludes 0% of the observations"
+[1] "   At least 50% of feature excludes 5.62% of the observations"
+[1] "   In total, the final dataset has 89.13% of the observations and 95.91% of the market cap in the post  data"
+[1] "GBR"
+[1] "   Date screen excludes 94.83% of the observations"
+[1] "   Non-missing me and ret_1m excludes 4.87% of the observations"
+[1] "   Size screen excludes 0% of the observations"
+[1] "   At least 50% of feature excludes 2.37% of the observations"
+[1] "   In total, the final dataset has 92.88% of the observations and 95.92% of the market cap in the post  data"
+[1] "THA"
+[1] "   Date screen excludes 89.77% of the observations"
+[1] "   Non-missing me and ret_1m excludes 4.65% of the observations"
+[1] "   Size screen excludes 0% of the observations"
+[1] "   At least 50% of feature excludes 0.2% of the observations"
+[1] "   In total, the final dataset has 95.16% of the observations and 95.7% of the market cap in the post  data"
+
+> if (set$feat_prank) {
++     chars[, `:=`((features), lapply(.SD, as.double)), .SDcols = features]
++     for (f in features) {
++         if (match(f, .... [TRUNCATED] 
+
+> if (set$feat_impute) {
++     if (set$feat_prank) {
++         chars[, `:=`((features), lapply(.SD, function(x) if_else(is.na(x), 
++             0.5,  .... [TRUNCATED] 
+
+> clusters <- unique(char_info$cluster)
+
+> cluster_ranks <- clusters %>% map(function(cl) {
++     chars_sub <- char_info[cluster == cl]
++     data_sub <- chars[, chars_sub$characteristic, wit .... [TRUNCATED] 
+
+> chars <- cbind(chars[, .(excntry, id, eom, rvol_perc = rvol_252d, 
++     me_perc = market_equity, me, ret_exc_lead1m)], cluster_ranks)
+
+> chars[, `:=`((clusters), lapply(.SD, function(x) ecdf(x)(x))), 
++     .SDcols = clusters, by = eom]
+[1] "Momentum: 1 of 3"
+[1] "Size: 2 of 3"
+[1] "Value: 3 of 3"

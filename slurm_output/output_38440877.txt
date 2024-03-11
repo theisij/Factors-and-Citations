@@ -1,0 +1,9 @@
+-------------------------------
+/gpfs/gibbs/project/tjensen/tij2/Factors-and-Citations
+Running on host r904u07n03.grace.ycrc.yale.edu
+Time is Mon Mar 11 13:53:08 EDT 2024
+SLURM_NODES are r904u07n03
+-------------------------------
+
+
+
