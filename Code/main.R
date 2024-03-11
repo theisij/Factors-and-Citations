@@ -3,7 +3,8 @@ library(lfe)
 library(tidyverse)
 library(data.table)
 
-chars_path <- "../../../International Stock Data/Public/Data/Characteristics/"
+# chars_path <- "../../../International Stock Data/Public/Data/Characteristics/"
+chars_path <- "../Data/Characteristics/"
 
 use_subset <- T
 
@@ -43,7 +44,6 @@ if (use_subset) {
 }
 
 # Run code --------------------
-# Run ---------------------------
 # source("Code/0-functions.R")
 source("Code/1.1-data.R", echo=T)
 source("Code/2.1-global_regressions.R")

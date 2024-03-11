@@ -15,7 +15,7 @@ char_info <- char_info[cluster_labels, on = "characteristic"]
 if (set$sub_chars) {
   char_info <- char_info[characteristic %in% c("ret_12_1", "be_me", "market_equity")]# Delete later}
 }
-features <- c(char_info$characteristic, "rvol")
+features <- c(char_info$characteristic, "rvol_252d")
 
 # Countries ----------------------------------------------------
 countries <- readxl::read_xlsx("Data/Country Classification.xlsx") |> setDT()
@@ -115,7 +115,7 @@ cluster_ranks <- clusters %>% map(function(cl) {
   data.table(x=data_sub %>% rowMeans()) %>% setnames(old = "x", new = cl)
 }) %>% bind_cols()
 # Add to existing data
-chars <- chars[, .(excntry, id, eom, rvol_perc=rvol, me_perc=market_equity, me, ret_exc_lead1m)] |> 
+chars <- chars[, .(excntry, id, eom, rvol_perc=rvol_252d, me_perc=market_equity, me, ret_exc_lead1m)] |> 
   cbind(cluster_ranks)
 # Re-standardize cluster features by date
 chars[, (clusters) := lapply(.SD, function(x) ecdf(x)(x)), .SDcols = clusters, by = eom]
