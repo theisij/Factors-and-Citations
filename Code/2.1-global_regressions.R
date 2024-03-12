@@ -11,12 +11,12 @@ if (set$update) {
     sub <- chars[, .(excntry, eom, dev, us, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
     # Regressions
     reg_list <- list(
-      "none" = felm(ret_exc_lead1m ~ var | excntry_eom | 0 | excntry+eom, data = sub),
-      "time" = felm(ret_exc_lead1m ~ var+var:t | excntry_eom | 0 | excntry+eom, data = sub),
-      "liq" = felm(ret_exc_lead1m ~ var*me_perc | excntry_eom | 0 | excntry+eom, data = sub),
-      "rvol" = felm(ret_exc_lead1m ~ var*rvol_perc | excntry_eom | 0 | excntry+eom, data = sub),
-      "region" = felm(ret_exc_lead1m ~ var+var:dev | excntry_eom | 0 | excntry+eom, data = sub),
-      "us" = felm(ret_exc_lead1m ~ var+var:us | excntry_eom | 0 | excntry+eom, data = sub)
+      "none" = felm(ret_exc_lead1m ~ var | excntry_eom | 0 | eom, data = sub),
+      "time" = felm(ret_exc_lead1m ~ var+var:t | excntry_eom | 0 | eom, data = sub),
+      "liq" = felm(ret_exc_lead1m ~ var*me_perc | excntry_eom | 0 | eom, data = sub),
+      "rvol" = felm(ret_exc_lead1m ~ var*rvol_perc | excntry_eom | 0 | eom, data = sub),
+      "region" = felm(ret_exc_lead1m ~ var+var:dev | excntry_eom | 0 | eom, data = sub),
+      "us" = felm(ret_exc_lead1m ~ var+var:us | excntry_eom | 0 | eom, data = sub)
     )
     # prettify
     names(reg_list) |> map(function(nm) {
