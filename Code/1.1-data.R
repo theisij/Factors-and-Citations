@@ -1,14 +1,47 @@
 # Char info ------------------------------------
-char_info <- readxl::read_xlsx("Paper/Factor Details_revision1.xlsx", sheet = "details") |> 
-  select("characteristic"=abr_jkp, direction) |> 
-  filter(!is.na(characteristic)) |> 
-  mutate(direction= direction |> as.numeric()) |> 
+char_info <- readxl::read_xlsx("Paper/Factor Details_revision1.xlsx",
+                               sheet = "details", range = "A1:T300") %>%
+  select("characteristic"=abr_jkp, cite, "date_range"=`in-sample period`, direction, "cites"=`Google Scholar Citation Count`) %>%
+  # filter(!is.na(characteristic)) %>%
+  mutate(
+    sample_start = date_range %>% str_extract("^\\d+") %>% as.integer(),
+    sample_end = date_range %>% str_extract("\\d+$") %>% as.integer()
+  ) |> 
+  select(-date_range) |> 
   setDT()
-# Add cluster labels
+
+# New classification ---------------------------
 # cluster_labels <- fread("Data/Cluster Labels.csv")
 new_class <- readxl::read_xlsx("Paper/new_classification.xlsx") %>%
   select("characteristic"=abr_jkp, cite, paper_about=`Paper is about`, factor_about = `Factor is about`) |> 
   setDT()
+
+new_class[, paper_about := str_to_title(paper_about)]
+new_class[, factor_about := str_to_title(factor_about)]
+new_class[paper_about %in% c("Na", "Wrong Cite", "?"), paper_about := NA_character_]
+new_class[, year := str_extract(cite, "\\d{4}") %>% as.integer()] # # Extract year from cite
+
+# Theme info, including cites and OOS period
+paper_class <- new_class[!is.na(paper_about), .(cite, year, paper_about)] |> unique()
+paper_class <- unique(char_info[, .(cite, cites, sample_start, sample_end)])[paper_class, on = "cite"]
+theme_info <- copy(paper_class)
+# Split cases with "/" into multiple rows with cites divided
+theme_info[, n := str_count(paper_about, "/")+1]
+theme_info <- theme_info[, .(cite, paper_about = strsplit(paper_about, "/")[[1]], cites=cites/n, year, sample_start, sample_end), by = .I]
+# First with first year in each theme
+theme_info[, first_year := min(year), by = paper_about]
+
+theme_info <- theme_info[, n_total := sum(cites)][, .(
+  n = .N, 
+  cite = unique(cite[year==first_year])[1],
+  start = as.integer(min(sample_start[year==first_year], na.rm=T)),
+  end = as.integer(max(sample_end[year==first_year], na.rm=T)),
+  cites = sum(cites),
+  cites_rel=sum(cites)/unique(n_total)
+), by = paper_about]
+theme_info |> setnames(old = "paper_about", new = "cluster")
+
+# Add cluster labels
 cluster_labels <- new_class[, .(characteristic, cluster=factor_about)][!is.na(characteristic)]
 char_info <- char_info[cluster_labels, on = "characteristic"]
 

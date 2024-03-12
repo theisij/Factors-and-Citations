@@ -20,6 +20,10 @@ scale_fill_discrete <- function(...) {
   scale_fill_manual(..., values = colours_theme)
 }
 
+# Settings ------------
+lt_w <- 7
+lt_h <- 6
+
 # Settings ---------------------
 set <- list(
   update = T,    # update result file?
