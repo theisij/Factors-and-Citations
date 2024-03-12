@@ -36,6 +36,6 @@ if (set$update) {
   estimates |> fwrite(paste0(folder_path, "/estimates.csv"))
 } else {
   # Load output ----
-  estimates <- fread("Data/Generated/2024-03-12/estimates_time_excntry.csv")
+  estimates <- fread("Data/Generated/2024-03-12/estimates.csv")
 }
 
