@@ -4,19 +4,36 @@ if (set$update) {
   chars[, excntry_eom := paste0(excntry, eom)]
   chars[, dev := (excntry %in% countries[msci_development == "developed", excntry])]
   chars[, us := (excntry=="USA")]
+  chars[, volatile := (rvol_perc>0.5)]
+  chars[, micro := (me_perc<0.5)]
+  # chars[, size_factor := case_when(
+  #   size_grp %in% c("mega", "large") ~ "large",
+  #   size_grp %in% c("small") ~ "small",
+  #   size_grp %in% c("micro", "nano") ~ "micro"
+  # ) |> factor(levels = c("large", "small", "micro"))]
+  # chars[, size_grp := size_grp |> factor(levels = c("mega", "large", "small", "micro", "nano"))]
   # Estimate regression ----------------
   estimates <- clusters |> map(function(feat) {
     print(paste0(feat, ": ", match(feat, clusters), " of ", length(clusters)))
     # Data
-    sub <- chars[, .(excntry, eom, dev, us, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
+    sub <- chars[, .(excntry, eom, dev, us, micro, volatile, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
+    # Short dummy
+    sub[, short := (var < 0.5)]
+    # Post sample dummy
+    ps <- theme_info[cluster==feat]$end
+    sub[, post := (year(eom) > ps)]
     # Regressions
     reg_list <- list(
       "none" = felm(ret_exc_lead1m ~ var | excntry_eom | 0 | eom, data = sub),
       "time" = felm(ret_exc_lead1m ~ var+var:t | excntry_eom | 0 | eom, data = sub),
       "liq" = felm(ret_exc_lead1m ~ var*me_perc | excntry_eom | 0 | eom, data = sub),
+      "liq-extremes" = felm(ret_exc_lead1m ~ var*me_perc+var:me_perc:micro | excntry_eom | 0 | eom, data = sub),
       "rvol" = felm(ret_exc_lead1m ~ var*rvol_perc | excntry_eom | 0 | eom, data = sub),
+      "rvol-extremes" = felm(ret_exc_lead1m ~ var*rvol_perc+var:rvol_perc:volatile | excntry_eom | 0 | eom, data = sub),
       "region" = felm(ret_exc_lead1m ~ var+var:dev | excntry_eom | 0 | eom, data = sub),
-      "us" = felm(ret_exc_lead1m ~ var+var:us | excntry_eom | 0 | eom, data = sub)
+      "us" = felm(ret_exc_lead1m ~ var+var:us | excntry_eom | 0 | eom, data = sub),
+      "short" = felm(ret_exc_lead1m ~ var+var:short | excntry_eom | 0 | eom, data = sub),
+      "post" = felm(ret_exc_lead1m ~ var+var:post | excntry_eom | 0 | eom, data = sub)
     )
     # prettify
     names(reg_list) |> map(function(nm) {
@@ -37,5 +54,12 @@ if (set$update) {
 } else {
   # Load output ----
   estimates <- fread("Data/Generated/2024-03-12/estimates.csv")
+}
+
+# 
+if (FALSE) {
+  data <- tibble(x=seq(0,1,0.01), x2=x^2, y = if_else(x<0.2, x, 0.2)) 
+  data |> ggplot(aes(x, y)) + geom_point()+geom_smooth(method = "lm", se=F, formula = y ~ poly(x,2))
+  lm(y ~ x + x2, data = data) |> summary()
 }
 

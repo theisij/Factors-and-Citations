@@ -69,7 +69,7 @@ ret_cutoffs[, eom := eom+1-months(1)-1]
 chars <- countries$excntry |> map(function(cntry) {
   print(cntry)
   chars_cntry <- fread(paste0(chars_path, str_to_lower(cntry), ".csv"), 
-                 select = unique(c("excntry", "source_crsp", "id", "eom", "size_grp", "dolvol_126d", "ami_126d", "rvol_252d", "me", "ret_exc_lead1m", features)),  
+                 select = unique(c("excntry", "size_grp", "source_crsp", "id", "eom", "size_grp", "dolvol_126d", "ami_126d", "rvol_252d", "me", "ret_exc_lead1m", features)),  
                  colClasses = c("eom" = "character"))
   chars_cntry[, eom := eom %>% lubridate::fast_strptime(format = "%Y%m%d") %>% as.Date()]
   chars_cntry[, dolvol := dolvol_126d]
@@ -148,7 +148,7 @@ cluster_ranks <- clusters %>% map(function(cl) {
   data.table(x=data_sub %>% rowMeans()) %>% setnames(old = "x", new = cl)
 }) %>% bind_cols()
 # Add to existing data
-chars <- chars[, .(excntry, id, eom, rvol_perc=rvol_252d, me_perc=market_equity, me, ret_exc_lead1m)] |> 
+chars <- chars[, .(excntry, id, eom, size_grp, rvol_perc=rvol_252d, me_perc=market_equity, me, ret_exc_lead1m)] |> 
   cbind(cluster_ranks)
 # Re-standardize cluster features by date
 chars[, (clusters) := lapply(.SD, function(x) ecdf(x)(x)), .SDcols = clusters, by = eom]
