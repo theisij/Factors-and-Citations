@@ -26,8 +26,18 @@ paper_class <- new_class[!is.na(paper_about), .(cite, year, paper_about)] |> uni
 paper_class <- unique(char_info[, .(cite, cites, sample_start, sample_end)])[paper_class, on = "cite"]
 theme_info <- copy(paper_class)
 # Split cases with "/" into multiple rows with cites divided
-theme_info[, n := str_count(paper_about, "/")+1]
-theme_info <- theme_info[, .(cite, paper_about = strsplit(paper_about, "/")[[1]], cites=cites/n, year, sample_start, sample_end), by = .I]
+if (FALSE) {
+  # Old, didn't work on cluster
+  theme_info[, n := str_count(paper_about, "/")+1]
+  theme_info <- theme_info[, .(cite, paper_about = strsplit(paper_about, "/")[[1]], cites=cites/n, year, sample_start, sample_end), by = .I]
+} else {
+  # New
+  theme_info <- theme_info %>%
+    mutate(n = str_count(paper_about, "/") + 1,
+           cites = cites / n) %>%
+    separate_rows(paper_about, sep = "/") |> setDT()
+}
+
 # First with first year in each theme
 theme_info[, first_year := min(year), by = paper_about]
 

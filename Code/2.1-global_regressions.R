@@ -69,16 +69,28 @@ if (FALSE) {
   # Save the plot below to pdf
   pdf("Figures/correlation.pdf")
   
-  # Your corrplot code
-  chars[eom == max(eom)][, clusters, with = FALSE] |>
-    cor() |>
-    corrplot::corrplot(type = "lower", method = "number", number.cex = 0.3, tl.cex = 0.7, 
-                       order = "hclust", hclust.method = "average")
+  if (FALSE) {
+    # One period
+    chars[eom == max(eom)][, clusters, with = FALSE] |>
+      cor() |>
+      corrplot::corrplot(type = "lower", method = "number", number.cex = 0.3, tl.cex = 0.7, 
+                         order = "hclust", hclust.method = "average")
+  } else {
+    # All periods
+    # Compute average correlation across all time periods
+    cor_list <- unique(chars$eom) |> map(function(d) {
+      chars[eom == eom][, clusters, with = FALSE] |>
+        cor()
+    }, .progress = T)
+    # Compute average of matrix across cor list
+    cor_avg <- Reduce(`+`, cor_list) / length(cor_list)
+    # cor_avg |> fwrite("Data/Generated/cor_avg.csv")
+    cor_avg |> corrplot::corrplot(type = "lower", method = "number", number.cex = 0.3, tl.cex = 0.7, 
+                                  order = "hclust", hclust.method = "average")
+  }
   
   # Close the PDF device
   dev.off()
   
-  chars[eom==max(eom)][, clusters, with=F] |> 
-    cor() |> 
-    corrplot::corrplot(type = "lower", method = "number", number.cex = 0.7)
+  
 }
