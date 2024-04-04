@@ -46,7 +46,8 @@ cluster_labels <- new_class[, .(characteristic, cluster=factor_about)][!is.na(ch
 char_info <- char_info[cluster_labels, on = "characteristic"]
 
 if (set$sub_chars) {
-  char_info <- char_info[characteristic %in% c("ret_12_1", "be_me", "market_equity")]# Delete later}
+  char_info <- char_info[characteristic %in% c("ret_12_1", "be_me", "market_equity", "rvol_21d")]
+  char_info <- char_info[cluster%in%c("Low Risk", "Value") | characteristic=="market_equity"]
 }
 features <- c(char_info$characteristic, "rvol_252d")
 

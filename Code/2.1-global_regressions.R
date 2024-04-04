@@ -22,6 +22,7 @@ if (set$update) {
     # Post sample dummy
     ps <- theme_info[cluster==feat]$end
     sub[, post := (year(eom) > ps)]
+    print(summary(sub))
     # Regressions
     reg_list <- list(
       "none" = felm(ret_exc_lead1m ~ var | excntry_eom | 0 | eom, data = sub),
@@ -63,3 +64,21 @@ if (FALSE) {
   lm(y ~ x + x2, data = data) |> summary()
 }
 
+# Correlation plot -------------
+if (FALSE) {
+  # Save the plot below to pdf
+  pdf("Figures/correlation.pdf")
+  
+  # Your corrplot code
+  chars[eom == max(eom)][, clusters, with = FALSE] |>
+    cor() |>
+    corrplot::corrplot(type = "lower", method = "number", number.cex = 0.3, tl.cex = 0.7, 
+                       order = "hclust", hclust.method = "average")
+  
+  # Close the PDF device
+  dev.off()
+  
+  chars[eom==max(eom)][, clusters, with=F] |> 
+    cor() |> 
+    corrplot::corrplot(type = "lower", method = "number", number.cex = 0.7)
+}
