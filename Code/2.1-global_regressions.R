@@ -21,6 +21,10 @@ if (set$update) {
     sub[, short := (var < 0.5)]
     # Post sample dummy
     ps <- theme_info[cluster==feat]$end
+    if (is.na(ps)) {
+      print(paste0("Missing post_sample end for ", feat))
+      ps <- max(sub$eom)
+    }
     sub[, post := (year(eom) > ps)]
     print(summary(sub))
     # Regressions
@@ -67,7 +71,7 @@ if (FALSE) {
 # Correlation plot -------------
 if (FALSE) {
   # Save the plot below to pdf
-  pdf("Figures/correlation.pdf")
+  pdf("Figures/correlation_all.pdf")
   
   if (FALSE) {
     # One period
@@ -84,7 +88,7 @@ if (FALSE) {
     }, .progress = T)
     # Compute average of matrix across cor list
     cor_avg <- Reduce(`+`, cor_list) / length(cor_list)
-    # cor_avg |> fwrite("Data/Generated/cor_avg.csv")
+    # cor_avg |> saveRDS("Data/Generated/cor_avg.RDS")
     cor_avg |> corrplot::corrplot(type = "lower", method = "number", number.cex = 0.3, tl.cex = 0.7, 
                                   order = "hclust", hclust.method = "average")
   }
