@@ -22,6 +22,17 @@ estimates |>
   geom_errorbar(aes(ymin = estimate - 1.96*std.error, ymax = estimate + 1.96*std.error), width = 0.25, position = position_dodge(0.9)) +
   facet_wrap(~term, scales = "free_x") 
 
+# Correlations among all interactions -----
+estimates |> 
+  filter(term %in% all_ints | (term =="var" & model=="none")) |> 
+  select(feature, term, estimate) |> 
+  pivot_wider(names_from = term, values_from = estimate) |> 
+  left_join(theme_info[,.(feature=cluster, cites_rel)], by = "feature") |> 
+  filter(feature != "Fundamental Growth") |> 
+  select(-feature) |> 
+  cor(method="spearman") |> 
+  corrplot::corrplot(type = "lower", method = "number")
+
 # Nothing ---------------------------------
 estimates |> 
   filter(term %in% c("var") & model=="none") |> 

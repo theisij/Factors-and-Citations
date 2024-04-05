@@ -21,7 +21,7 @@ if (set$update) {
     sub[, short := (var < 0.5)]
     # Post sample dummy
     ps <- theme_info[cluster==feat]$end
-    if (is.na(ps)) {
+    if (length(ps)==0) {
       print(paste0("Missing post_sample end for ", feat))
       ps <- max(sub$eom)
     }
