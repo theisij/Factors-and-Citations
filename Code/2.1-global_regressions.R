@@ -4,19 +4,38 @@ if (set$update) {
   chars[, excntry_eom := paste0(excntry, eom)]
   chars[, dev := (excntry %in% countries[msci_development == "developed", excntry])]
   chars[, us := (excntry=="USA")]
-  chars[, volatile := (rvol_perc>0)]
-  chars[, micro := (me_perc<0)]
-  # chars[, size_factor := case_when(
-  #   size_grp %in% c("mega", "large") ~ "large",
-  #   size_grp %in% c("small") ~ "small",
-  #   size_grp %in% c("micro", "nano") ~ "micro"
-  # ) |> factor(levels = c("large", "small", "micro"))]
-  # chars[, size_grp := size_grp |> factor(levels = c("mega", "large", "small", "micro", "nano"))]
+  if (FALSE) {
+    chars[, volatile := (rvol_perc>0)]
+    chars[, micro := (me_perc<0)]
+    # chars[, size_factor := case_when(
+    #   size_grp %in% c("mega", "large") ~ "large",
+    #   size_grp %in% c("small") ~ "small",
+    #   size_grp %in% c("micro", "nano") ~ "micro"
+    # ) |> factor(levels = c("large", "small", "micro"))]
+    # chars[, size_grp := size_grp |> factor(levels = c("mega", "large", "small", "micro", "nano"))]
+  } else {
+    # Five-level size factor
+    chars[, size_factor := case_when(
+      me_perc <= -0.3 ~ "smallest",
+      me_perc <= -0.1 ~ "small",
+      me_perc <=  0.1 ~ "mid",
+      me_perc <=  0.3 ~ "big",
+      me_perc <=  0.5 ~ "biggest"
+    ) |> factor(levels = c("biggest", "big", "mid", "small", "smallest"))]
+    # Five-level vol factor
+    chars[, vol_factor := case_when(
+      rvol_perc <= -0.3 ~ "lowestvol",
+      rvol_perc <= -0.1 ~ "lowvol",
+      rvol_perc <=  0.1 ~ "midvol",
+      rvol_perc <=  0.3 ~ "highvol",
+      rvol_perc <=  0.5 ~ "highestvol"
+    ) |> factor(levels = c("lowestvol", "lowvol", "midvol", "highvol", "highestvol"))]
+  }
   # Estimate regression ----------------
   estimates <- clusters |> map(function(feat) {
     print(paste0(feat, ": ", match(feat, clusters), " of ", length(clusters)))
     # Data
-    sub <- chars[, .(excntry, eom, dev, us, micro, volatile, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
+    sub <- chars[, .(excntry, eom, dev, us, size_factor, vol_factor, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
     # Short dummy
     sub[, short := (var < 0)]
     # Post sample dummy
@@ -32,9 +51,9 @@ if (set$update) {
       "none" = felm(ret_exc_lead1m ~ var | excntry_eom | 0 | eom, data = sub),
       "time" = felm(ret_exc_lead1m ~ var+var:t | excntry_eom | 0 | eom, data = sub),
       "liq" = felm(ret_exc_lead1m ~ var*me_perc | excntry_eom | 0 | eom, data = sub),
-      "liq-extremes" = felm(ret_exc_lead1m ~ var*me_perc+var:me_perc:micro | excntry_eom | 0 | eom, data = sub),
+      "liq-extremes" = felm(ret_exc_lead1m ~ var*size_factor | excntry_eom | 0 | eom, data = sub),
       "rvol" = felm(ret_exc_lead1m ~ var*rvol_perc | excntry_eom | 0 | eom, data = sub),
-      "rvol-extremes" = felm(ret_exc_lead1m ~ var*rvol_perc+var:rvol_perc:volatile | excntry_eom | 0 | eom, data = sub),
+      "rvol-extremes" = felm(ret_exc_lead1m ~ var*vol_factor | excntry_eom | 0 | eom, data = sub),
       "region" = felm(ret_exc_lead1m ~ var+var:dev | excntry_eom | 0 | eom, data = sub),
       "us" = felm(ret_exc_lead1m ~ var+var:us | excntry_eom | 0 | eom, data = sub),
       "short" = felm(ret_exc_lead1m ~ var+var:short | excntry_eom | 0 | eom, data = sub),
