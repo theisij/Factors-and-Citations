@@ -4,8 +4,8 @@ if (set$update) {
   chars[, excntry_eom := paste0(excntry, eom)]
   chars[, dev := (excntry %in% countries[msci_development == "developed", excntry])]
   chars[, us := (excntry=="USA")]
-  chars[, volatile := (rvol_perc>0.5)]
-  chars[, micro := (me_perc<0.5)]
+  chars[, volatile := (rvol_perc>0)]
+  chars[, micro := (me_perc<0)]
   # chars[, size_factor := case_when(
   #   size_grp %in% c("mega", "large") ~ "large",
   #   size_grp %in% c("small") ~ "small",
@@ -18,7 +18,7 @@ if (set$update) {
     # Data
     sub <- chars[, .(excntry, eom, dev, us, micro, volatile, excntry_eom, t, me_perc, rvol_perc, var = get(feat), ret_exc_lead1m)]
     # Short dummy
-    sub[, short := (var < 0.5)]
+    sub[, short := (var < 0)]
     # Post sample dummy
     ps <- theme_info[cluster==feat]$end
     if (length(ps)==0) {
@@ -58,7 +58,7 @@ if (set$update) {
   estimates |> fwrite(paste0(folder_path, "/estimates.csv"))
 } else {
   # Load output ----
-  estimates <- fread("Data/Generated/2024-03-12/estimates.csv")
+  estimates <- fread("Data/Generated/2024-04-05/estimates.csv")
 }
 
 # 

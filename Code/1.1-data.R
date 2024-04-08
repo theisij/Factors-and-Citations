@@ -132,14 +132,16 @@ if (set$feat_prank) {
   for(f in features) {
     if (match(f, features) %% 10 == 0) print(paste0("Feature ", match(f, features), " out of ", length(features)))
     chars[, zero := (get(f) == 0)]
-    chars[!is.na(get(f)), (f) := ecdf(get(f))(get(f)), by = eom] # Didn't have by statement before!!
+    chars[!is.na(get(f)), (f) := ecdf(get(f))(get(f)), by = eom]
     chars[zero == T, (f) := 0][, zero := NULL]  # Set exact zeros to 0 (ecdf always returns >0)
+    # Demean
+    chars[, (f) := get(f) - mean(get(f), na.rm=T), by = eom]
   }
 } 
 # Feature Imputation 
 if (set$feat_impute) {
   if (set$feat_prank) {
-    chars[, (features) := lapply(.SD, function(x) if_else(is.na(x), 0.5, x)), .SDcols=features]
+    chars[, (features) := lapply(.SD, function(x) if_else(is.na(x), 0, x)), .SDcols=features]
   } else {
     chars[, (features) := lapply(.SD, function(x) if_else(is.na(x), median(x, na.rm=T), x)), .SDcols=features, by=eom]
   }
@@ -153,7 +155,7 @@ cluster_ranks <- clusters %>% map(function(cl) {
   for (x in chars_sub$characteristic) {
     dir <- chars_sub[characteristic == x, direction]
     if (dir == -1) {
-      data_sub[, (x) := 1-get(x)]
+      data_sub[, (x) := 0.5-get(x)]
     }
   }
   data.table(x=data_sub %>% rowMeans()) %>% setnames(old = "x", new = cl)
@@ -163,3 +165,4 @@ chars <- chars[, .(excntry, id, eom, size_grp, rvol_perc=rvol_252d, me_perc=mark
   cbind(cluster_ranks)
 # Re-standardize cluster features by date
 chars[, (clusters) := lapply(.SD, function(x) ecdf(x)(x)), .SDcols = clusters, by = eom]
+chars[, (clusters) := lapply(.SD, function(x) x-mean(x)), .SDcols = clusters, by = eom]
